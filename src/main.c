@@ -8,42 +8,40 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-uint8_t SECONDS = 0x00;
+#include <drivers/clock.h>
+
+uint8_t CURRENT_DISPLAY_CASE = 0x00;
+uint8_t BUTTON_PRESSED = 0;
+uint8_t (*DISPLAY_FUNCTIONS[3])(void) = {
+    clock_get_second,
+    clock_get_minute,
+    clock_get_hour
+};
+
 
 int main(void){
-    // Clear Timer on Compare Match (CTC) Mode with OCRnA as top.
-    TCCR1B |= _BV(WGM12);
+    clock_init(22, 49, 0);
 
-    // Enable Timer/Counter4 overflow interrupt.
-    TIMSK1 = _BV(OCIE1A);
-
-    // clk / (2 * prescaler * (1 + OCRnA))
-    OCR1A = 0xF424;
-
-    // Setup Timer 0 pre-scaler to clk/256
-    TCCR1B |= _BV(CS12);
-
-    // Setup PH3 to output
+    // Setup PORTH to output
     DDRH = 0xFF;
+
+    // Enable external interrupt 7.
+    EIMSK |= _BV(INT7);
+
+    // Trigger external interrupt 0 on falling edge.
+    EICRB |= _BV(ISC71);
 
     // Enable MCU interrupt (set I-flag)
     sei();
 
     while (1) {
-        PORTH = ~SECONDS;
+        PORTH = ~(*DISPLAY_FUNCTIONS[CURRENT_DISPLAY_CASE])();
     }
 
     return 0;
 }
 
-ISR(TIMER1_COMPA_vect){
-    // Setup PH3 to output
-    // DDRH |= _BV(DDH3);
-    // PORTH = PORTH << 1;
-    if (SECONDS < 60) {
-        SECONDS++;
-    }
-    else {
-        SECONDS = 0x00;
-    }
+ISR(INT7_vect){
+    CURRENT_DISPLAY_CASE++;
+    CURRENT_DISPLAY_CASE = CURRENT_DISPLAY_CASE % 3;
 }
