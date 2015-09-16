@@ -31,7 +31,7 @@ SOURCES := $(shell find $(SDIR) -name '*.c')
 # SOURCES = $(patsubst $(SDIR)/%.c, $(ODIR)/%.o, $(wildcard $(SDIR)/*.c))
 
 # Flags
-CFLAGS=-DF_CPU=10000000UL -std=gnu99 -mmcu=$(CMCU) -I$(SDIR) -Wall -pedantic -Os -g
+CFLAGS=-DF_CPU=8000000UL -std=gnu99 -mmcu=$(CMCU) -I$(SDIR) -Wall -pedantic -Os -g
 LFLAGS = -Wall -I. -lm
 PFLAGS=-p $(PMCU) -c stk600 -P usb -U
 
